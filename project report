@@ -1,1 +1,73 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Constants
+q = -1.602e-19  # charge of electron (C)
+m = 9.11e-31    # mass of electron (kg)
+KE = 20 * 1.602e-19  # kinetic energy in joules
+v0 = np.sqrt(2 * KE / m)  # initial velocity (m/s)
+
+# Convert inches to meters
+inch_to_meter = 0.0254
+start_bend = 3.5 * inch_to_meter  # where the magnetic field starts
+total_length = 14 * inch_to_meter  # end of the chamber
+
+# Simulation setup
+dt = 1e-9  # time step (seconds)
+n_steps = 40000  # number of steps
+
+# Magnetic fields to try (in Tesla)
+B_fields = [0.0008, 0.0009, 0.0010]
+
+# Set up the plot
+plt.figure(figsize=(10, 6))
+
+for B in B_fields:
+    # Initial conditions
+    x = 0.0
+    y = 0.0
+    vx = v0
+    vy = 0.0
+    
+    x_vals = []
+    y_vals = []
+    
+    for _ in range(n_steps):
+        x_vals.append(x / inch_to_meter)  # convert to inches
+        y_vals.append(y / inch_to_meter)
+        
+        # Apply magnetic field after reaching start_bend
+        if x >= start_bend:
+            ax = (q / m) * vy * B
+            ay = -(q / m) * vx * B
+        else:
+            ax = 0
+            ay = 0
+        
+        # Update velocity
+        vx += ax * dt
+        vy += ay * dt
+        
+        # Update position
+        x += vx * dt
+        y += vy * dt
+        
+        # Stop if out of bounds
+        if x > total_length or abs(y) > (6/2 * inch_to_meter):
+            break
+    
+    # Plot trajectory
+    plt.plot(x_vals, y_vals, label=f'B = {B*1000:.1f} mT')
+
+# Plot setup
+plt.axvline(x=3.5, color='gray', linestyle='--', label='Start B field')
+plt.axvline(x=14, color='black', linestyle='-', label='Target')
+plt.xlabel('x position (inches)')
+plt.ylabel('y position (inches)')
+plt.title('Electron Trajectories Under Different Magnetic Fields')
+plt.legend()
+plt.grid(True)
+plt.ylim(-3.5, 3.5)
+plt.xlim(0, 16)
+plt.show()
 
